@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/csse351-201310-krenztr/!svn/ver/13/program6/Shaders
+END
+Render3dModel.frag
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/csse351-201310-krenztr/!svn/ver/13/program6/Shaders/Render3dModel.frag
+END
+Render3dModel.vert
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/csse351-201310-krenztr/!svn/ver/13/program6/Shaders/Render3dModel.vert
+END
+RenderTexture.frag
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/csse351-201310-krenztr/!svn/ver/13/program6/Shaders/RenderTexture.frag
+END
+RenderTexture.vert
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/csse351-201310-krenztr/!svn/ver/13/program6/Shaders/RenderTexture.vert
+END

@@ -150,16 +150,19 @@ private:
 	{
 		glViewport(0, 0, viewportX, viewportY);
 		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluOrtho2D(0,1,0,1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		
 		GLfloat projMatrix[16];
 		GLfloat viewMatrix[16];
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0,1,0,1);
 		glGetFloatv(GL_PROJECTION_MATRIX, projMatrix);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
 		glGetFloatv(GL_MODELVIEW_MATRIX, viewMatrix);
+		glPopMatrix();
 		
 		if(GL20Support)
 		{

@@ -21,6 +21,10 @@ sf::Clock Clock;
 ShowTexture texRender;
 int currentRes[2];
 float lightPos[3];
+float cameraPos[3];
+
+FILE * logFile;
+bool GL20Support;
 
 void renderScene();
 void handleEvents();
@@ -29,11 +33,49 @@ void setupTargetTexture();
 void setShaderVariables(GLuint shaderProg);
 void __glewInit();
 
+// This method is just for testing
+void drawExampleCube(){
+	glBegin(GL_QUADS);
+
+	glVertexAttrib​3f();
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+	
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+
+	glEnd();
+}
+
 void renderScene()
 {
 	// Set color and depth clear value
 	glClearDepth(1.f);
-	glClearColor(0.f, 0.f, 0.f, 0.f);
+	glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
 	
 	// Enable Z-buffer read and write
 	glEnable(GL_DEPTH_TEST);
@@ -49,6 +91,9 @@ void renderScene()
 		glUseProgramObjectARB(shaderProg);
 	setShaderVariables(shaderProg);
 		
+	//Draw everything
+	drawExampleCube();
+
 	//copy buffer to texture
 	glBindTexture(GL_TEXTURE_2D,textureTarget);
 	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, currentRes[0], currentRes[1], 0);
@@ -104,6 +149,18 @@ void init()
 	lightPos[1] = 0.0f;
 	lightPos[2] = 0.0f;
 
+	//Initial camera position
+	cameraPos[0] = 0.0f;
+	cameraPos[1] = 0.0f;
+	cameraPos[2] = 0.0f;
+
+	//Initial perspective, remove later
+	glMatrixMode(GL_PROJECTION);
+	gluPerspective(45.0,1.0, 0.5, 50.0);
+	glMatrixMode(GL_MODELVIEW);
+	glTranslatef(0.0,0.0,-10.0);
+	glRotatef(45.0,1.0,1.0,1.0);
+
 	//setup render target texture
 	//this will eventually hald the rendered scene and be
 	//rendered to a quad for post process effects
@@ -127,6 +184,9 @@ void init()
 	//this object helps draw textures that fill the viewport
 	texRender = ShowTexture(texProg);
 	texRender.GL20Support = GL20Support;
+
+	// Bind custom attributes
+	//glBindAttribLocation(shaderProg, 1, "ambient");
 
 	// Start render loop
 	while (App->IsOpened())
@@ -166,13 +226,22 @@ void setShaderVariables(GLuint shaderProg)
 		
 	if(GL20Support)
 	{
+		//TODO: Clean up shaders
 		glUniform2f(glGetUniformLocation(shaderProg, "resolution"), currentRes[0], currentRes[1]);
 		glUniform3f(glGetUniformLocation(shaderProg, "lightPos"),  lightPos[0], lightPos[1], lightPos[2]);
+		glUniform3f(glGetUniformLocation(shaderProg, "cameraPos"), cameraPos[0], cameraPos[1], cameraPos[2]);
+		glUniform3f(glGetUniformLocation(shaderProg, "ambientLight"), 1.0, 1.0, 1.0);
+		glUniform3f(glGetUniformLocation(shaderProg, "diffuseLight"), 1.0, 1.0, 1.0);
+		glUniform3f(glGetUniformLocation(shaderProg, "specularLight"), 1.0, 1.0, 1.0);
+		glUniform1f(glGetUniformLocation(shaderProg, "a"), 1.0);
+		glUniform1f(glGetUniformLocation(shaderProg, "b"), 0.1);
+		glUniform1f(glGetUniformLocation(shaderProg, "c"), 0.1);
 		glUniformMatrix4fv(glGetUniformLocation(shaderProg, "projMatrix"), 1, false, projMatrix);
 		glUniformMatrix4fv(glGetUniformLocation(shaderProg, "viewMatrix"), 1, false, viewMatrix);
 	}
 	else
 	{
+		//TODO: Match ARB block with block above
 		glUniform2fARB(glGetUniformLocationARB(shaderProg, "resolution"), currentRes[0], currentRes[1]);
 		glUniform3fARB(glGetUniformLocationARB(shaderProg, "lightPos"),  lightPos[0], lightPos[1], lightPos[2]);
 		glUniformMatrix4fvARB(glGetUniformLocationARB(shaderProg, "projMatrix"), 1, false, projMatrix);

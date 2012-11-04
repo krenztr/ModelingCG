@@ -22,3 +22,13 @@ Shader program info log for:
   Shaders/RenderTexture.vert
   Shaders/RenderTexture.frag
 
+Shader info log for:
+  Shaders/NoLighting.vert
+
+Shader info log for:
+  Shaders/NoLighting.frag
+
+Shader program info log for:
+  Shaders/NoLighting.vert
+  Shaders/NoLighting.frag
+

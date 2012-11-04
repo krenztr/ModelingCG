@@ -1,27 +1,34 @@
 #include "glew/glew.h"
 #include <SFML/Window.hpp>
 #include <math.h>
+#include <stdio.h>
 
 #include "Config.h"
 #include "ShaderManager.h"
 #include "TextureBufferObject.h"
 #include "ShowTexture.h"
+#include "Camera.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #include <unistd.h>
 #include <string.h>
 #endif
+#define RESOLUTION 800
 
 GLuint textureTarget;
 GLuint shaderProg;
 GLuint texProg;
+GLuint noLightProg;
 sf::Window *App;
 sf::Clock Clock;
 ShowTexture texRender;
 int currentRes[2];
 float lightPos[3];
 float cameraPos[3];
+Camera camera;
+int lastPos[2] = {0,0};
+int buttonDown[3] = {0,0};
 
 FILE * logFile;
 bool GL20Support;
@@ -32,43 +39,97 @@ void init();
 void setupTargetTexture();
 void setShaderVariables(GLuint shaderProg);
 void __glewInit();
+void update_perspective();
+void draw_grid(int w, int h, int dx, int dy);
 
 // This method is just for testing
 void drawExampleCube(){
 	glBegin(GL_QUADS);
-
-	glVertexAttrib​3f();
+	glVertexAttrib3f(1,1.0f,0.0f,0.0f);
+	glNormal3f(1.0f,0.0f,0.0f);
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(1.0f,-1.0f,1.0f);
 	glVertex3f(1.0f,-1.0f,-1.0f);
 	glVertex3f(1.0f,1.0f,-1.0f);
 	
+	glVertexAttrib3f(1,0.0f,1.0f,0.0f);
+	glNormal3f(-1.0f,0.0f,0.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,-1.0f);
 	glVertex3f(-1.0f,1.0f,-1.0f);
 
+	glVertexAttrib3f(1,0.0f,0.0f,1.0f);
+	glNormal3f(0.0f,1.0f,0.0f);
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,-1.0f);
 	glVertex3f(1.0f,1.0f,-1.0f);
 
+	glVertexAttrib3f(1,1.0f,1.0f,0.0f);
+	glNormal3f(0.0f,-1.0f,0.0f);
 	glVertex3f(1.0f,-1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,-1.0f);
 	glVertex3f(1.0f,-1.0f,-1.0f);
 
+	glVertexAttrib3f(1,0.0f,1.0f,1.0f);
+	glNormal3f(0.0f,0.0f,1.0f);
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
 	glVertex3f(1.0f,-1.0f,1.0f);
 
+	glVertexAttrib3f(1,1.0f, 1.0f,1.0f);
+	glNormal3f(0.0f,0.0f,-1.0f);
 	glVertex3f(1.0f,1.0f,-1.0f);
 	glVertex3f(-1.0f,1.0f,-1.0f);
 	glVertex3f(-1.0f,-1.0f,-1.0f);
 	glVertex3f(1.0f,-1.0f,-1.0f);
 
 	glEnd();
+}
+
+void draw_xy_grid(int w, int h, float dx, float dy)
+{
+	glColor3f(0.0,0.0,0.0);
+	glBegin(GL_LINES);
+	float xstart = w*dx/2;
+	float ystart = w*dx/2;
+	float xacc = -xstart;
+	for(int i = 0; i < w+1; i++)
+	{
+		if(i != w/2)
+		{
+			glVertex3f(xacc,-ystart,0.0);
+			glVertex3f(xacc,ystart,0.0);
+		}
+		xacc += dx;
+	}
+	float yacc = -ystart;
+	for(int i = 0; i < h+1; i++)
+	{
+		if(i != h/2)
+		{
+			glVertex3f(-xstart,yacc,0.0);
+			glVertex3f(xstart,yacc,0.0);
+		}
+		yacc += dy;
+	}
+	glEnd();
+
+	glLineWidth(5.0);
+	glBegin(GL_LINES);
+
+	glColor3f(1.0,0.0,0.0);
+	glVertex3f(-xstart,0.0,0.0);
+	glVertex3f(xstart,0.0,0.0);
+	
+	glColor3f(0.0,1.0,0.0);
+	glVertex3f(0.0,-ystart,0.0);
+	glVertex3f(0.0,ystart,0.0);
+	glEnd();
+	glLineWidth(1.0);
 }
 
 void renderScene()
@@ -92,7 +153,18 @@ void renderScene()
 	setShaderVariables(shaderProg);
 		
 	//Draw everything
+	glPushMatrix();
+	setShaderVariables(shaderProg);
 	drawExampleCube();
+	glPopMatrix();
+
+	//Draw the UI (does not use lighting)
+	if(GL20Support)
+		glUseProgram(noLightProg);
+	else
+		glUseProgramObjectARB(noLightProg);
+	setShaderVariables(noLightProg);
+	draw_xy_grid(20,20,1.0,1.0);
 
 	//copy buffer to texture
 	glBindTexture(GL_TEXTURE_2D,textureTarget);
@@ -110,12 +182,14 @@ void renderScene()
 void handleEvents()
 {
 	sf::Event Event;
+	const sf::Input& Input = App->GetInput();
+	bool shiftDown = Input.IsKeyDown(sf::Key::LShift) || Input.IsKeyDown(sf::Key::RShift);
 	while (App->GetEvent(Event))
 	{
 		// Close window : exit
 		if (Event.Type == sf::Event::Closed)
 			App->Close();
-		
+		//
 		// Escape key : exit
 		if ((Event.Type == sf::Event::KeyPressed) && (Event.Key.Code == sf::Key::Escape))
 			App->Close();
@@ -126,27 +200,80 @@ void handleEvents()
 			glViewport(0, 0, Event.Size.Width, Event.Size.Height);
 			currentRes[0] = Event.Size.Width;
 			currentRes[1] = Event.Size.Height;
+			update_perspective();
 			setupTargetTexture();
 		}
+
+		if (Event.Type == sf::Event::MouseButtonPressed)
+		{	
+			lastPos[0] = Event.MouseButton.X;
+			lastPos[1] = Event.MouseButton.Y;
+			
+			if(Event.MouseButton.Button == sf::Mouse::Left && !shiftDown)
+			{
+				buttonDown[0] = 1;
+			}
+			if(Event.MouseButton.Button == sf::Mouse::Right)
+				buttonDown[1] = 1;
+			if(Event.MouseButton.Button == sf::Mouse::Middle)
+				buttonDown[2] = 1;
+			if(Event.MouseButton.Button == sf::Mouse::Left && shiftDown)
+				buttonDown[2] = 1;
+		}
+
+		if (Event.Type == sf::Event::MouseButtonReleased)
+		{
+			if(Event.MouseButton.Button == sf::Mouse::Left && !shiftDown)
+				buttonDown[0] = 0;
+			if(Event.MouseButton.Button == sf::Mouse::Right)
+				buttonDown[1] = 0;
+			if(Event.MouseButton.Button == sf::Mouse::Middle)
+				buttonDown[2] = 0;
+			if(Event.MouseButton.Button == sf::Mouse::Left && shiftDown)
+				buttonDown[2] = 0;
+		}
+
+		if (Event.Type == sf::Event::MouseMoved && (buttonDown[0] || buttonDown[1] || buttonDown[2]) )
+		{
+			int x = Event.MouseMove.X;
+			int y = Event.MouseMove.Y;
+			
+			if(buttonDown[0])
+				camera.trackball_rotate(lastPos[0], lastPos[1], x, y, currentRes[0], currentRes[1]);
+			if(buttonDown[1])
+				camera.trackball_translate(lastPos[0], lastPos[1], x, y);
+			if(buttonDown[2])
+				camera.trackball_translate_z(lastPos[0], lastPos[1], x, y);
+			lastPos[0] = x;
+			lastPos[1] = y;
+		}
 	}
+}
+
+void update_perspective()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0,currentRes[0]/currentRes[1], 0.5, 50.0);
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void init()
 {
 	// Create the main window
-	App = new sf::Window(sf::VideoMode(RES, RES, 32), "Shader Box");
+	App = new sf::Window(sf::VideoMode(RESOLUTION, RESOLUTION, 32), "Modeling Program");
 		
 	// Create a clock for measuring time elapsed
 	Clock = sf::Clock();
 		
 	__glewInit();
 
-	currentRes[0] = RES;
-	currentRes[1] = RES;	
+	currentRes[0] = RESOLUTION;
+	currentRes[1] = RESOLUTION;	
 
 	//Initial light position
-	lightPos[0] = 0.0f;
-	lightPos[1] = 0.0f;
+	lightPos[0] = 2.0f;
+	lightPos[1] = 2.0f;
 	lightPos[2] = 0.0f;
 
 	//Initial camera position
@@ -154,13 +281,16 @@ void init()
 	cameraPos[1] = 0.0f;
 	cameraPos[2] = 0.0f;
 
-	//Initial perspective, remove later
-	glMatrixMode(GL_PROJECTION);
-	gluPerspective(45.0,1.0, 0.5, 50.0);
-	glMatrixMode(GL_MODELVIEW);
-	glTranslatef(0.0,0.0,-10.0);
-	glRotatef(45.0,1.0,1.0,1.0);
-
+	//Perspective setup
+	update_perspective();
+	
+	//Camera setup
+	camera = Camera();
+	camera.translate(0.0,0.0,20.0);
+	camera.rotate(60.0, 1.0, 0.0, 0.0);
+	camera.rotate(30.0, 0.0, 0.0, 1.0);
+	camera.apply_transformations();
+	
 	//setup render target texture
 	//this will eventually hald the rendered scene and be
 	//rendered to a quad for post process effects
@@ -181,12 +311,16 @@ void init()
 	char const * texFrag = "Shaders/RenderTexture.frag";
 	texProg = shaders.buildShaderProgram(&texVert, &texFrag, 1, 1);
 
+	char const * noLightVert = "Shaders/NoLighting.vert";
+	char const * noLightFrag = "Shaders/NoLighting.frag";
+	noLightProg = shaders.buildShaderProgram(&noLightVert, &noLightFrag, 1, 1);
+
 	//this object helps draw textures that fill the viewport
 	texRender = ShowTexture(texProg);
 	texRender.GL20Support = GL20Support;
 
 	// Bind custom attributes
-	//glBindAttribLocation(shaderProg, 1, "ambient");
+	glBindAttribLocation(shaderProg, 1, "ambient");
 
 	// Start render loop
 	while (App->IsOpened())
@@ -229,7 +363,7 @@ void setShaderVariables(GLuint shaderProg)
 		//TODO: Clean up shaders
 		glUniform2f(glGetUniformLocation(shaderProg, "resolution"), currentRes[0], currentRes[1]);
 		glUniform3f(glGetUniformLocation(shaderProg, "lightPos"),  lightPos[0], lightPos[1], lightPos[2]);
-		glUniform3f(glGetUniformLocation(shaderProg, "cameraPos"), cameraPos[0], cameraPos[1], cameraPos[2]);
+		glUniform3f(glGetUniformLocation(shaderProg, "cameraPos"), camera.getX(), camera.getY(), camera.getZ());
 		glUniform3f(glGetUniformLocation(shaderProg, "ambientLight"), 1.0, 1.0, 1.0);
 		glUniform3f(glGetUniformLocation(shaderProg, "diffuseLight"), 1.0, 1.0, 1.0);
 		glUniform3f(glGetUniformLocation(shaderProg, "specularLight"), 1.0, 1.0, 1.0);

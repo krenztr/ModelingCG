@@ -13,16 +13,6 @@ Shader program info log for:
   Shaders/Render3dModel.frag
 
 Shader info log for:
-  Shaders/RenderTexture.vert
-
-Shader info log for:
-  Shaders/RenderTexture.frag
-
-Shader program info log for:
-  Shaders/RenderTexture.vert
-  Shaders/RenderTexture.frag
-
-Shader info log for:
   Shaders/NoLighting.vert
 
 Shader info log for:

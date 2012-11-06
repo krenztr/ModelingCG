@@ -14,11 +14,12 @@
 #include <unistd.h>
 #include <string.h>
 #endif
-#define RESOLUTION 800
+#define RESOLUTION_X 800
+#define RESOLUTION_Y 800
 
 GLuint textureTarget;
 GLuint shaderProg;
-GLuint texProg;
+//GLuint texProg;
 GLuint noLightProg;
 sf::Window *App;
 sf::Clock Clock;
@@ -118,7 +119,7 @@ void draw_xy_grid(int w, int h, float dx, float dy)
 	}
 	glEnd();
 
-	glLineWidth(5.0);
+	glLineWidth(3.0);
 	glBegin(GL_LINES);
 
 	glColor3f(1.0,0.0,0.0);
@@ -167,7 +168,7 @@ void renderScene()
 	draw_xy_grid(20,20,1.0,1.0);
 
 	//copy buffer to texture
-	glBindTexture(GL_TEXTURE_2D,textureTarget);
+	/*glBindTexture(GL_TEXTURE_2D,textureTarget);
 	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, currentRes[0], currentRes[1], 0);
 	texRender.useProgram();
 		
@@ -176,7 +177,7 @@ void renderScene()
 	setShaderVariables(texRender.getProgram());
 		
 	//sets up a few shader variables and draws the texture on a full view quad
-	texRender.render(textureTarget, currentRes, currentRes);
+	texRender.render(textureTarget, currentRes, currentRes);*/
 }
 
 void handleEvents()
@@ -199,9 +200,9 @@ void handleEvents()
 		{
 			glViewport(0, 0, Event.Size.Width, Event.Size.Height);
 			currentRes[0] = Event.Size.Width;
-			currentRes[1] = Event.Size.Height;
+			currentRes[1] = Event.Size.Height;	
 			update_perspective();
-			setupTargetTexture();
+			//setupTargetTexture();
 		}
 
 		if (Event.Type == sf::Event::MouseButtonPressed)
@@ -254,22 +255,23 @@ void update_perspective()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0,currentRes[0]/currentRes[1], 0.5, 50.0);
+	gluPerspective(45.0,RESOLUTION_X/RESOLUTION_Y, 0.5, 50.0);
+	glScalef((float)RESOLUTION_X/currentRes[0], (float)RESOLUTION_Y/currentRes[1], 1.0);
 	glMatrixMode(GL_MODELVIEW);
 }
 
 void init()
 {
 	// Create the main window
-	App = new sf::Window(sf::VideoMode(RESOLUTION, RESOLUTION, 32), "Modeling Program");
+	App = new sf::Window(sf::VideoMode(RESOLUTION_X, RESOLUTION_Y, 32), "Modeling Program");
 		
 	// Create a clock for measuring time elapsed
 	Clock = sf::Clock();
 		
 	__glewInit();
 
-	currentRes[0] = RESOLUTION;
-	currentRes[1] = RESOLUTION;	
+	currentRes[0] = RESOLUTION_X;
+	currentRes[1] = RESOLUTION_Y;
 
 	//Initial light position
 	lightPos[0] = 2.0f;
@@ -282,7 +284,10 @@ void init()
 	cameraPos[2] = 0.0f;
 
 	//Perspective setup
-	update_perspective();
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0,currentRes[0]/currentRes[1], 0.5, 50.0);
+	glMatrixMode(GL_MODELVIEW);
 	
 	//Camera setup
 	camera = Camera();
@@ -294,9 +299,9 @@ void init()
 	//setup render target texture
 	//this will eventually hald the rendered scene and be
 	//rendered to a quad for post process effects
-	int numTex = 1;
+	/*int numTex = 1;
 	glGenTextures(numTex, &textureTarget);
-	setupTargetTexture();
+	setupTargetTexture();*/
 
 	//setup the shader programs
 	//the first set is the vertex and fragment shaders for the 3D render
@@ -307,17 +312,17 @@ void init()
 	char const * drawFrag = "Shaders/Render3dModel.frag";
 	shaderProg = shaders.buildShaderProgram(&drawVert, &drawFrag, 1, 1);
 		
-	char const * texVert = "Shaders/RenderTexture.vert";
+	/*char const * texVert = "Shaders/RenderTexture.vert";
 	char const * texFrag = "Shaders/RenderTexture.frag";
-	texProg = shaders.buildShaderProgram(&texVert, &texFrag, 1, 1);
+	texProg = shaders.buildShaderProgram(&texVert, &texFrag, 1, 1);*/
 
 	char const * noLightVert = "Shaders/NoLighting.vert";
 	char const * noLightFrag = "Shaders/NoLighting.frag";
 	noLightProg = shaders.buildShaderProgram(&noLightVert, &noLightFrag, 1, 1);
 
 	//this object helps draw textures that fill the viewport
-	texRender = ShowTexture(texProg);
-	texRender.GL20Support = GL20Support;
+	/*texRender = ShowTexture(texProg);
+	texRender.GL20Support = GL20Support;*/
 
 	// Bind custom attributes
 	glBindAttribLocation(shaderProg, 1, "ambient");

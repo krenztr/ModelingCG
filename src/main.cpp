@@ -8,6 +8,7 @@
 #include "TextureBufferObject.h"
 #include "ShowTexture.h"
 #include "Camera.h"
+#include "shape.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -19,7 +20,6 @@
 
 GLuint textureTarget;
 GLuint shaderProg;
-//GLuint texProg;
 GLuint noLightProg;
 sf::Window *App;
 sf::Clock Clock;
@@ -262,6 +262,7 @@ void update_perspective()
 
 void init()
 {
+	Shape s = ShapeCube((unsigned int)0, TransformTranslate(vec3(0.0,0.0,0.0)), TransformRotate(vec3(0.0,0.0,0.0)), TransformScale(vec3(1.0,1.0,1.0)));
 	// Create the main window
 	App = new sf::Window(sf::VideoMode(RESOLUTION_X, RESOLUTION_Y, 32), "Modeling Program");
 		

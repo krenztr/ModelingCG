@@ -25,10 +25,10 @@ void drawSphere(int hDetail, int vDetail)
 	z = -1 + (1.0/vDetail);
 	for(int i = 0; i < hDetail+1; i++)
 	{
-		glNormal3f(rMod(z)*cos(i*inc),
-			rMod(z)*sin(i*inc), z);
-		glVertex3f(rMod(z)*cos(i*inc),
-			rMod(z)*sin(i*inc), z);
+		glNormal3f(rMod(z)*sin(i*inc),
+			rMod(z)*cos(i*inc), z);
+		glVertex3f(rMod(z)*sin(i*inc),
+			rMod(z)*cos(i*inc), z);
 	}
 	glEnd();
 

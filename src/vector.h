@@ -9,7 +9,7 @@
 #ifndef vector_h
 #define vector_h
 
-#include <math.h>
+#include <Math.h>
 
 struct vec2 {
     float x;
@@ -90,6 +90,12 @@ struct vec2 {
     operator const float* () const { return static_cast<const float*>( &x ); }
     
     operator float* () { return static_cast<float*>( &x ); }
+    
+    // +----------------------+
+    // | extraction operators |
+    // +----------------------+
+    
+    vec2 get(const int ind1, const int ind2) const { if(ind1 < 0 || ind1 > 1 || ind2 < 0 || ind2 > 1) { return vec2(); } return vec2(*(&x + ind1), *(&x + ind2)); }
 };
 
 struct vec3 {
@@ -179,6 +185,14 @@ struct vec3 {
     operator const float* () const { return static_cast<const float*>( &x ); }
     
     operator float* () { return static_cast<float*>( &x ); }
+    
+    // +----------------------+
+    // | extraction operators |
+    // +----------------------+
+    
+    vec2 get(const int ind1, const int ind2) const { if(ind1 < 0 || ind1 > 2 || ind2 < 0 || ind2 > 2) { return vec2(); } return vec2(*(&x + ind1), *(&x + ind2)); }
+    
+    vec3 get(const int ind1, const int ind2, const int ind3) const { if(ind1 < 0 || ind1 > 2 || ind2 < 0 || ind2 > 2 || ind3 < 0 || ind3 > 2) { return vec3(); } return vec3(*(&x + ind1), *(&x + ind2), *(&x + ind3)); }
 };
     
 struct vec4 {
@@ -267,6 +281,16 @@ struct vec4 {
     operator const float* () const { return static_cast<const float*>( &x ); }
         
     operator float* () { return static_cast<float*>( &x ); }
+    
+    // +----------------------+
+    // | extraction operators |
+    // +----------------------+
+    
+    vec2 get(const int ind1, const int ind2) const { if(ind1 < 0 || ind1 > 3 || ind2 < 0 || ind2 > 3) { return vec2(); } return vec2(*(&x + ind1), *(&x + ind2)); }
+    
+    vec3 get(const int ind1, const int ind2, const int ind3) const { if(ind1 < 0 || ind1 > 3 || ind2 < 0 || ind2 > 3 || ind3 < 0 || ind3 > 3) { return vec3(); } return vec3(*(&x + ind1), *(&x + ind2), *(&x + ind3)); }
+    
+    vec4 get(const int ind1, const int ind2, const int ind3, const int ind4) const { if(ind1 < 0 || ind1 > 3 || ind2 < 0 || ind2 > 3 || ind3 < 0 || ind3 > 3 || ind4 < 0 || ind4 > 3) { return vec4(); } return vec4(*(&x + ind1), *(&x + ind2), *(&x + ind3), *(&x + ind4)); }
 };
 
 #endif

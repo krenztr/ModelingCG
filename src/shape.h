@@ -14,7 +14,7 @@
 
 typedef enum {SHAPE_CUBE, SHAPE_SPHERE, SHAPE_TETRAHEDRON, SHAPE_PLANE, SHAPE_OCTAHEDRON/*, SHAPE_ICOSAHEDRON*/, SHAPE_CYLINDER} shape_type;
 
-struct Shape
+class Shape
 {
     unsigned int shapeId;
     shape_type type;
@@ -23,71 +23,79 @@ struct Shape
     TransformScale scale;
     //TransformShear shear;
     
+protected:
     Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
     
-    void drawShape(){}
+public:
+    virtual void drawShape();
 };
 
-struct ShapeCube : Shape
+class ShapeCube : public Shape
 {
+    public:
     ShapeCube(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_CUBE, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawCube();
     }
 };
 
-struct ShapeSphere : Shape
+class ShapeSphere : public Shape
 {
     int hseg;
     int vseg;
     
+public:
     ShapeSphere(unsigned int shapeId, int hseg, int vseg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : hseg(hseg), vseg(vseg), Shape(SHAPE_CUBE, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawSphere(hseg, vseg);
     }
 };
 
-struct ShapeCylinder : Shape
+class ShapeCylinder : public Shape
 {
     int seg;
     
+public:
     ShapeCylinder(unsigned int shapeId, int seg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : seg(seg), Shape(SHAPE_CYLINDER, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawCylinder(seg);
     }
 };
 
-struct ShapeTetrahedron : Shape
+class ShapeTetrahedron : public Shape
 {
+public:
     ShapeTetrahedron(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_TETRAHEDRON, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawTetrahedron();
     }
 };
 
-struct ShapePlane : Shape
+class ShapePlane : public Shape
 {
+public:
     ShapePlane(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_PLANE, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawPlane();
     }
 };
 
-struct ShapeOctahedron : Shape
+class ShapeOctahedron : public Shape
 {
+public:
     ShapeOctahedron(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_OCTAHEDRON, shapeId, trans, rot, scale/*, shear*/) {}
     
-    void drawShape()
+    virtual void drawShape()
     {
         drawOctahedron();
     }

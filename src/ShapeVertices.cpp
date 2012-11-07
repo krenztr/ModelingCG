@@ -13,8 +13,8 @@ float rMod(float z)
 }
 
 //TODO: Make sure all shapes face outward.
-{
 void drawSphere(int hDetail, int vDetail)
+{
 	float z, thickness, inc;
 	thickness = 2.0/vDetail;
 	inc = 2*M_PI/hDetail;

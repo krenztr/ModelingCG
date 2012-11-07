@@ -4,7 +4,7 @@
 //	Octahedron, plane (quad)
 // all shapes are normal and centered at the origin
 
-#define VERTI_DETAIL 13
+#define VERTI_DETAIL 15
 #define HORIZ_DETAIL 16
 
 float rMod(float z);

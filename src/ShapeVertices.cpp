@@ -36,7 +36,7 @@ void drawSphere(int hDetail, int vDetail)
 	for(float i = 0.5; i < vDetail; i++)
 	{
 		z = -1 + i*(2.0/vDetail);
-		if(i%2 == 0)
+		if((int) (i+0.500001)%2 == 0)
 			offset = 0.0;
 		else offset = -0.5;
 

@@ -16,6 +16,7 @@ typedef enum {SHAPE_CUBE, SHAPE_SPHERE, SHAPE_TETRAHEDRON, SHAPE_PLANE, SHAPE_OC
 
 class Shape
 {
+public:
     unsigned int shapeId;
     shape_type type;
     TransformTranslate trans;
@@ -43,10 +44,10 @@ class ShapeCube : public Shape
 
 class ShapeSphere : public Shape
 {
+public:
     int hseg;
     int vseg;
     
-public:
     ShapeSphere(unsigned int shapeId, int hseg, int vseg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : hseg(hseg), vseg(vseg), Shape(SHAPE_CUBE, shapeId, trans, rot, scale/*, shear*/) {}
     
     virtual void drawShape()
@@ -57,9 +58,9 @@ public:
 
 class ShapeCylinder : public Shape
 {
+public:
     int seg;
     
-public:
     ShapeCylinder(unsigned int shapeId, int seg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : seg(seg), Shape(SHAPE_CYLINDER, shapeId, trans, rot, scale/*, shear*/) {}
     
     virtual void drawShape()

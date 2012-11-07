@@ -19,19 +19,22 @@ void drawSphere(int hDetail, int vDetail)
 	thickness = 2.0/vDetail;
 	inc = 2*M_PI/hDetail;
 
+	// Bottom
 	glBegin(GL_TRIANGLE_FAN);
 	glNormal3f(0.0, 0.0, -1.0);
 	glVertex3f(0.0, 0.0, -1.0);
 	z = -1 + (1.0/vDetail);
 	for(int i = 0; i < hDetail+1; i++)
 	{
-		glNormal3f(rMod(z)*sin(i*inc),
-			rMod(z)*cos(i*inc), z);
+		//glNormal3f(rMod(z)*sin(i*inc),
+		//	rMod(z)*cos(i*inc), z);
+		glNormal3f(0.0, 0.0, -1.0);
 		glVertex3f(rMod(z)*sin(i*inc),
 			rMod(z)*cos(i*inc), z);
 	}
 	glEnd();
 
+	// Middle
 	float j, k, offset;
 	for(float i = 0.5; i < vDetail; i++)
 	{
@@ -58,6 +61,7 @@ void drawSphere(int hDetail, int vDetail)
 		glEnd();
 	}
 
+	// Top
 	glBegin(GL_TRIANGLE_FAN);
 	glNormal3f(0.0, 0.0, 1.0);
 	glVertex3f(0.0, 0.0, 1.0);

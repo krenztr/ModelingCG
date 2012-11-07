@@ -13,8 +13,70 @@ float rMod(float z)
 }
 
 //TODO: Make sure all shapes face outward.
-void drawSphere(int hDetail, int vDetail)
 {
+void drawSphere(int hDetail, int vDetail)
+	float z, thickness, inc;
+	thickness = 2.0/vDetail;
+	inc = 2*M_PI/hDetail;
+
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0.0, 0.0, -1.0);
+	glVertex3f(0.0, 0.0, -1.0);
+	z = -1 + (1.0/vDetail);
+	for(int i = 0; i < hDetail+1; i++)
+	{
+		glNormal3f(rMod(z)*cos(i*inc),
+			rMod(z)*sin(i*inc), z);
+		glVertex3f(rMod(z)*cos(i*inc),
+			rMod(z)*sin(i*inc), z);
+	}
+	glEnd();
+
+	float j, k, offset;
+	for(float i = 0.5; i < vDetail; i++)
+	{
+		z = -1 + i*(2.0/vDetail);
+		if(i%2 == 0)
+			offset = 0.0;
+		else offset = -0.5;
+
+		glBegin(GL_TRIANGLE_STRIP);
+		for(j = offset; j <= hDetail; j++)	
+		{
+			glNormal3f(rMod(z+thickness)*cos(j*inc),
+				rMod(z+thickness)*sin(j*inc),
+				z+thickness);
+			glVertex3f(rMod(z+thickness)*cos(j*inc),
+				rMod(z+thickness)*sin(j*inc),
+				z+thickness);
+			k = j + 0.5;
+			glNormal3f(rMod(z)*cos(k*inc),
+				rMod(z)*sin(k*inc),z);
+			glVertex3f(rMod(z)*cos(k*inc),
+				rMod(z)*sin(k*inc),z);
+		}
+		glEnd();
+	}
+
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0.0, 0.0, 1.0);
+	glVertex3f(0.0, 0.0, 1.0);
+	
+	if(vDetail % 2 == 1)
+		offset = 0.5;
+	else offset = 0.0;
+	z = 1 - (1.0/vDetail);
+
+	for(int i = 0; i < hDetail+1; i++)
+	{
+		glNormal3f(rMod(z)*cos(i*inc+offset),
+			rMod(z)*sin(i*inc+offset), z);
+		glVertex3f(rMod(z)*cos(i*inc+offset),
+			rMod(z)*sin(i*inc+offset), z);
+	}
+	glEnd();
+}
+/*{
 	float z, thickness, inc;
 	thickness = 1.0/vDetail;
 	inc = 2*M_PI/hDetail;
@@ -75,7 +137,7 @@ void drawSphere(int hDetail, int vDetail)
 			rMod(z)*sin(i*inc+offset), z);
 	}
 	glEnd();
-}
+}*/
 
 void drawCylinder(int hDetail)
 {
@@ -250,6 +312,7 @@ void drawOctahedron()
 	glVertex3f(0.0,0.0,-1.0);
 	glVertex3f(0.0,1.0,0.0);
 	glVertex3f(1.0,0.0,0.0);
+	glEnd();
 }
 
 void drawPlane()

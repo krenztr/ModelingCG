@@ -19,6 +19,7 @@ class Shape
 public:
     unsigned int shapeId;
     shape_type type;
+    vec3 color;
     int hseg;
     int vseg;
     TransformTranslate trans;
@@ -26,7 +27,7 @@ public:
     TransformScale scale;
     //TransformShear shear;
     
-    Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), hseg(HORIZ_DETAIL), vseg(VERTI_DETAIL), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
+    Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), color(vec3(0.5)), hseg(HORIZ_DETAIL), vseg(VERTI_DETAIL), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
     
     void drawShape()
     {

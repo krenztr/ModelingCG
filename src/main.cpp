@@ -9,6 +9,8 @@
 #include "ShowTexture.h"
 #include "Camera.h"
 #include "shape.h"
+#include <list>
+#include <map>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -30,6 +32,8 @@ float cameraPos[3];
 Camera camera;
 int lastPos[2] = {0,0};
 int buttonDown[3] = {0,0};
+std::list<Shape> listOfShapes;
+unsigned int idCounter;
 
 FILE * logFile;
 bool GL20Support;
@@ -42,6 +46,28 @@ void setShaderVariables(GLuint shaderProg);
 void __glewInit();
 void update_perspective();
 void draw_grid(int w, int h, int dx, int dy);
+
+void deleteShape()
+{
+	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
+	{
+		it->drawShape();
+	}
+}
+
+void drawShapes()
+{
+	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
+	{
+		it->drawShape();
+	}
+}
+
+void createShape(shape_type st)
+{
+	listOfShapes.push_back(Shape(st, idCounter, TransformTranslate(vec3(0.0,0.0,0.0)), TransformRotate(vec3(0.0,0.0,0.0)), TransformScale(vec3(1.0,1.0,1.0))));
+	idCounter++;
+}
 
 // This method is just for testing
 void drawExampleCube(){

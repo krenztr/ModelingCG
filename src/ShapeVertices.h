@@ -1,6 +1,4 @@
 #define _USE_MATH_DEFINES
-#include <math.h>
-#include <iostream>
 
 // Shapes: Sphere Cube, Tetrahedron, Icosahedron (not implemented),
 //	Octahedron, plane (quad)
@@ -11,9 +9,9 @@
 
 float rMod(float z);
 
-void drawSphere(float hDetail, float vDetail);
+void drawSphere(int hDetail, int vDetail);
 
-void drawCylinder(float hDetail);
+void drawCylinder(int hDetail);
 
 void drawSphere();
 

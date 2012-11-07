@@ -1,4 +1,8 @@
 #include "ShapeVertices.h"
+#include <SFML/Window.hpp>
+#include <math.h>
+#include <iostream>
+
 
 float rMod(float z)
 {
@@ -9,7 +13,7 @@ float rMod(float z)
 }
 
 //TODO: Make sure all shapes face outward.
-void drawSphere(float hDetail, float vDetail)
+void drawSphere(int hDetail, int vDetail)
 {
 	float z, thickness, inc;
 	thickness = 1.0/vDetail;
@@ -58,7 +62,7 @@ void drawSphere(float hDetail, float vDetail)
 	glNormal3f(0.0, 0.0, 1.0);
 	glVertex3f(0.0, 0.0, 1.0);
 	
-	if(vDetail%2 == 1)
+	if(vDetail % 2 == 1)
 		offset = 0.5;
 	else offset = 0.0;
 	z = 1 - (2.0/vDetail);
@@ -73,7 +77,7 @@ void drawSphere(float hDetail, float vDetail)
 	glEnd();
 }
 
-void drawCylinder(float hDetail)
+void drawCylinder(int hDetail)
 {
 	float inc = 2*M_PI/hDetail;
 	
@@ -264,5 +268,5 @@ void drawSphereAt(float radius, float x, float y, float z)
 {
 	glScalef(radius, radius, radius);
 	glTranslatef(x, y, z);
-	drawShpere();
+	drawSphere();
 }

@@ -27,7 +27,7 @@ protected:
     Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
     
 public:
-    virtual void drawShape();
+    virtual void drawShape() = 0;
 };
 
 class ShapeCube : public Shape

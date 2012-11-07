@@ -10,56 +10,43 @@
 #define shape_h
 
 #include "transform.h"
+#include "ShapeVertices.h"
 
 typedef enum {SHAPE_CUBE, SHAPE_SPHERE, SHAPE_TETRAHEDRON, SHAPE_PLANE, SHAPE_OCTAHEDRON/*, SHAPE_ICOSAHEDRON*/, SHAPE_CYLINDER} shape_type;
 
-struct Shape
+class Shape
 {
+public:
     unsigned int shapeId;
     shape_type type;
+    vec3 color;
+    int hseg;
+    int vseg;
     TransformTranslate trans;
     TransformRotate rot;
     TransformScale scale;
     //TransformShear shear;
     
-    Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
+    Shape(shape_type type, unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : type(type), shapeId(shapeId), color(vec3(0.5)), hseg(HORIZ_DETAIL), vseg(VERTI_DETAIL), trans(trans), rot(rot), scale(scale)/*, shear(shear)*/ {}
     
-    void drawShape(){}
-};
-
-struct ShapeCube : Shape
-{
-    ShapeCube(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_CUBE, shapeId, trans, rot, scale/*, shear*/) {}
-};
-
-struct ShapeSphere : Shape
-{
-    int hseg;
-    int vseg;
-    
-    ShapeSphere(unsigned int shapeId, int hseg, int vseg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : hseg(hseg), vseg(vseg), Shape(SHAPE_CUBE, shapeId, trans, rot, scale/*, shear*/) {}
-};
-
-struct ShapeCylinder : Shape
-{
-    int seg;
-    
-    ShapeCylinder(unsigned int shapeId, int seg, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : seg(seg), Shape(SHAPE_CYLINDER, shapeId, trans, rot, scale/*, shear*/) {}
-};
-
-struct ShapeTetrahedron : Shape
-{
-    ShapeTetrahedron(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_TETRAHEDRON, shapeId, trans, rot, scale/*, shear*/) {}
-};
-
-struct ShapePlane : Shape
-{
-    ShapePlane(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_PLANE, shapeId, trans, rot, scale/*, shear*/) {}
-};
-
-struct ShapeOctahedron : Shape
-{
-    ShapeOctahedron(unsigned int shapeId, TransformTranslate trans, TransformRotate rot, TransformScale scale/*, TransformShear shear*/) : Shape(SHAPE_OCTAHEDRON, shapeId, trans, rot, scale/*, shear*/) {}
+    void drawShape()
+    {
+        switch(this->type)
+        {
+            case SHAPE_CUBE:
+                drawCube(); break;
+            case SHAPE_SPHERE:
+                drawSphere(this->hseg, this->vseg); break;
+            case SHAPE_TETRAHEDRON:
+                drawTetrahedron(); break;
+            case SHAPE_PLANE:
+                drawPlane(); break;
+            case SHAPE_OCTAHEDRON:
+                drawOctahedron(); break;
+            case SHAPE_CYLINDER:
+                drawCylinder(this->hseg); break;
+        }
+    }
 };
 
 #endif

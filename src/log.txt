@@ -1,0 +1,24 @@
+GLEW init finished...
+OpenGL 2.0 is supported. Shaders should run correctly.
+ARB vertex programs supported.
+ARB fragment programs supported.
+Shader info log for:
+  Shaders/Render3dModel.vert
+
+Shader info log for:
+  Shaders/Render3dModel.frag
+
+Shader program info log for:
+  Shaders/Render3dModel.vert
+  Shaders/Render3dModel.frag
+
+Shader info log for:
+  Shaders/NoLighting.vert
+
+Shader info log for:
+  Shaders/NoLighting.frag
+
+Shader program info log for:
+  Shaders/NoLighting.vert
+  Shaders/NoLighting.frag
+

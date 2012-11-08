@@ -349,6 +349,16 @@ void renderScene()
 	texRender.render(textureTarget, currentRes, currentRes);*/
 }
 
+float ffmin(float a, float b)
+{
+	return (a<b)?a:b;
+}
+
+float ffmax(float a, float b)
+{
+	return (b<a)?a:b;
+}
+
 void handleEvents()
 {
 	sf::Event Event;
@@ -373,11 +383,11 @@ void handleEvents()
 				switch(colorM)
 				{
 					case COLOR_R:
-						s->color[0] = fmin(1.0, s->color[0]+0.05); break;
+						s->color[0] = ffmin(1.0, s->color[0]+0.05); break;
 					case COLOR_G:
-						s->color[1] = fmin(1.0, s->color[1]+0.05); break;
+						s->color[1] = ffmin(1.0, s->color[1]+0.05); break;
 					case COLOR_B:
-						s->color[2] = fmin(1.0, s->color[2]+0.05); break;
+						s->color[2] = ffmin(1.0, s->color[2]+0.05); break;
 				}	
 			}
 			else if(Event.Key.Code == sf::Key::Down && selected != 0)
@@ -386,11 +396,11 @@ void handleEvents()
 				switch(colorM)
 				{
 					case COLOR_R:
-						s->color[0] = fmax(0.0, s->color[0]-0.05); break;
+						s->color[0] = ffmax(0.0, s->color[0]-0.05); break;
 					case COLOR_G:
-						s->color[1] = fmax(0.0, s->color[1]-0.05); break;
+						s->color[1] = ffmax(0.0, s->color[1]-0.05); break;
 					case COLOR_B:
-						s->color[2] = fmax(0.0, s->color[2]-0.05); break;
+						s->color[2] = ffmax(0.0, s->color[2]-0.05); break;
 				}	
 			}
 		}
@@ -560,7 +570,14 @@ bool handleButtons(float x, float y)
 	else if(BButton.contains(x,y))
 		colorM = COLOR_B;
 	else if(loadButton.contains(x,y))
+	{	
 		idCounter = load("default.mcg", &listOfShapes);
+		if(idCounter <= 0)
+		{
+			idCounter = 1;
+			listOfShapes.clear();
+		}
+	}
 	else if(saveButton.contains(x,y))
 		save("default", listOfShapes);
 	else return false;

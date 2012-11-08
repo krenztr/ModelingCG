@@ -3,6 +3,7 @@
 #include <list>
 #include <stdio.h>
 #include "shape.h"
+#include <stdlib.h>
 
 int save(char const * filename, std::list<Shape> listOfShapes)
 {

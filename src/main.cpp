@@ -27,6 +27,7 @@
 
 typedef enum {X_AXIS, Y_AXIS, Z_AXIS} axis_mode;
 typedef enum {TRANS_TRANSLATION, TRANS_ROTATION, TRANS_SCALE} trans_mode;
+typedef enum {COLOR_R, COLOR_G, COLOR_B} color_mode;
 
 GLuint textureTarget;
 GLuint shaderProg;
@@ -45,6 +46,7 @@ unsigned int idCounter;
 unsigned int selected;
 axis_mode axisM;
 trans_mode transM;
+color_mode colorM;
 
 vec3 buttonT = vec3(0.7,0.9,1.0);
 vec3 buttonB = vec3(0.1,0.1,0.1);
@@ -64,6 +66,9 @@ Button sphereButton = Button("Sphere",vec2(0,175),true,false,textC,padding,butto
 Button cylinderButton = Button("Cylinder",vec2(0,210),true,false,textC,padding,buttonT, buttonB, false,true);
 Button planeButton = Button("Plane",vec2(0,245),true,false,textC,padding,buttonT, buttonB, false,true);
 Button deleteButton = Button("Delete",vec2(0,280),true,false,textC,padding,buttonT, buttonB, false,true);
+Button RButton = Button("R",vec2(0,325),true,false,textC,padding,buttonT, buttonB, false,true);
+Button GButton = Button("G",vec2(30,325),true,false,textC,padding,buttonT, buttonB, false,true);
+Button BButton = Button("B",vec2(60,325),true,false,textC,padding,buttonT, buttonB, false,true);
 
 FILE * logFile;
 bool GL20Support;
@@ -359,6 +364,32 @@ void handleEvents()
 				App->Close();
 			else if(Event.Key.Code == sf::Key::Delete)
 				deleteShape();
+			else if(Event.Key.Code == sf::Key::Up && selected != 0)
+			{
+				Shape* s = findShape(selected);
+				switch(colorM)
+				{
+					case COLOR_R:
+						s->color[0] = fmin(1.0, s->color[0]+0.05); break;
+					case COLOR_G:
+						s->color[1] = fmin(1.0, s->color[1]+0.05); break;
+					case COLOR_B:
+						s->color[2] = fmin(1.0, s->color[2]+0.05); break;
+				}	
+			}
+			else if(Event.Key.Code == sf::Key::Down && selected != 0)
+			{
+				Shape* s = findShape(selected);
+				switch(colorM)
+				{
+					case COLOR_R:
+						s->color[0] = fmax(0.0, s->color[0]-0.05); break;
+					case COLOR_G:
+						s->color[1] = fmax(0.0, s->color[1]-0.05); break;
+					case COLOR_B:
+						s->color[2] = fmax(0.0, s->color[2]-0.05); break;
+				}	
+			}
 		}
 
 		// Resize event : adjust viewport
@@ -459,6 +490,9 @@ void buttonCheck()
 	XButton.isFlipped = false;
 	YButton.isFlipped = false;
 	ZButton.isFlipped = false;
+	RButton.isFlipped = false;
+	GButton.isFlipped = false;
+	BButton.isFlipped = false;
 	switch(transM)
 	{
 		case TRANS_TRANSLATION:
@@ -476,6 +510,15 @@ void buttonCheck()
 			YButton.isFlipped = true; break;
 		case Z_AXIS:
 			ZButton.isFlipped = true; break;
+	}
+	switch(colorM)
+	{
+		case COLOR_R:
+			RButton.isFlipped = true; break;
+		case COLOR_G:
+			GButton.isFlipped = true; break;
+		case COLOR_B:
+			BButton.isFlipped = true; break;
 	}
 }
 
@@ -507,6 +550,12 @@ bool handleButtons(float x, float y)
 		createShape(SHAPE_PLANE);
 	else if(deleteButton.contains(x,y))
 		deleteShape();
+	else if(RButton.contains(x,y))
+		colorM = COLOR_R;
+	else if(GButton.contains(x,y))
+		colorM = COLOR_G;
+	else if(BButton.contains(x,y))
+		colorM = COLOR_B;
 	else return false;
 	buttonCheck();
 	return true;
@@ -527,8 +576,11 @@ void drawButtons()
 	cylinderButton.drawButton();
 	planeButton.drawButton();
 	deleteButton.drawButton();
+	RButton.drawButton();
+	GButton.drawButton();
+	BButton.drawButton();
 	
-	vec4 viewport = getViewport();
+	/*vec4 viewport = getViewport();
 
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0f,0.0f,0.0f);
@@ -537,7 +589,7 @@ void drawButtons()
 	glVertex3f(0.0f,viewport[3]-375.0,0.0f);
 	glColor3f(0.0f,0.0f,1.0f);
 	glVertex3f(60.0f,viewport[3]-375.0,0.0f);
-	glEnd();
+	glEnd();*/
 }
 
 void update_perspective()

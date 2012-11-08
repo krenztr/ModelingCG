@@ -19,6 +19,10 @@
 #endif
 #define RESOLUTION_X 800
 #define RESOLUTION_Y 800
+#define SELECT_BOX_SIZE 1
+
+typedef enum {X_AXIS, Y_AXIS, Z_AXIS} axis_mode;
+typedef enum {TRANS_TRANSLATION, TRANS_ROTATION, TRANS_SCALE} trans_mode;
 
 GLuint textureTarget;
 GLuint shaderProg;
@@ -34,6 +38,9 @@ int lastPos[2] = {0,0};
 int buttonDown[3] = {0,0};
 std::list<Shape> listOfShapes;
 unsigned int idCounter;
+unsigned int selected;
+axis_mode axisM;
+trans_mode transM;
 
 FILE * logFile;
 bool GL20Support;
@@ -46,12 +53,63 @@ void setShaderVariables(GLuint shaderProg);
 void __glewInit();
 void update_perspective();
 void draw_grid(int w, int h, int dx, int dy);
+void listSelected(GLint hits, GLuint *buffer);
 
-void deleteShape()
+Shape* findShape(unsigned int id)
 {
 	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
 	{
-		it->drawShape();
+		if(it->shapeId == id)
+		{
+			return &(*it);
+		}
+	}
+	return NULL;
+}
+
+void drawSelectCube()
+{
+	glColor3f(1.0,1.0,1.0);
+	glBegin(GL_LINE_STRIP);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,-SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,-SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,-SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,-SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+
+	glVertex3f(-SELECT_BOX_SIZE,SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+
+	glVertex3f(-SELECT_BOX_SIZE,-SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(-SELECT_BOX_SIZE,-SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+
+	glVertex3f(SELECT_BOX_SIZE,-SELECT_BOX_SIZE,SELECT_BOX_SIZE);
+	glVertex3f(SELECT_BOX_SIZE,-SELECT_BOX_SIZE,-SELECT_BOX_SIZE);
+	glEnd();
+}
+
+void deleteShape(unsigned int id)
+{
+	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
+	{
+		if(it->shapeId == id)
+		{
+			listOfShapes.erase(it);
+			break;
+		}
 	}
 }
 
@@ -59,62 +117,117 @@ void drawShapes()
 {
 	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
 	{
+		glPushMatrix();
+		unsigned int id = it->shapeId;
+		vec3 transV = it->trans.trans;
+		vec3 rotV = it->rot.trans;
+		vec3 scaleV = it->scale.trans;
+		vec3 color = it->color;
+		glVertexAttrib3f(1,color[0],color[1],color[2]);
+		glTranslatef(transV[0],transV[1],transV[2]);
+		glRotatef(rotV[0],1.0,0.0,0.0);
+		glRotatef(rotV[1],0.0,1.0,0.0);
+		glRotatef(rotV[2],0.0,0.0,1.0);
+		glScalef(scaleV[0],scaleV[1],scaleV[2]);
+		glPushName(id);
+		setShaderVariables(shaderProg);
 		it->drawShape();
+		glPopName();
+		if(id == selected)
+		{
+			if(GL20Support)
+				glUseProgram(noLightProg);
+			else
+				glUseProgramObjectARB(noLightProg);
+			setShaderVariables(noLightProg);
+			drawSelectCube();
+			if(GL20Support)
+				glUseProgram(shaderProg);
+			else
+				glUseProgramObjectARB(shaderProg);
+		}
+		glPopMatrix();
 	}
 }
 
 void createShape(shape_type st)
 {
-	listOfShapes.push_back(Shape(st, idCounter, TransformTranslate(vec3(0.0,0.0,0.0)), TransformRotate(vec3(0.0,0.0,0.0)), TransformScale(vec3(1.0,1.0,1.0))));
+	Shape s = Shape(st, idCounter, TransformTranslate(vec3(0.0,0.0,3.0)), TransformRotate(vec3(45.0,0.0,0.0)), TransformScale(vec3(2.0,2.0,2.0)));
+	listOfShapes.push_back(s);
+	selected = idCounter;
 	idCounter++;
 }
 
-// This method is just for testing
-void drawExampleCube(){
-	glBegin(GL_QUADS);
-	glVertexAttrib3f(1,1.0f,0.0f,0.0f);
-	glNormal3f(1.0f,0.0f,0.0f);
-	glVertex3f(1.0f,1.0f,1.0f);
-	glVertex3f(1.0f,-1.0f,1.0f);
-	glVertex3f(1.0f,-1.0f,-1.0f);
-	glVertex3f(1.0f,1.0f,-1.0f);
-	
-	glVertexAttrib3f(1,0.0f,1.0f,0.0f);
-	glNormal3f(-1.0f,0.0f,0.0f);
-	glVertex3f(-1.0f,1.0f,1.0f);
-	glVertex3f(-1.0f,-1.0f,1.0f);
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glVertex3f(-1.0f,1.0f,-1.0f);
+void handleSelection(int x, int y)
+{
+	glInitNames();
+	GLuint hitBuffer[64] = {0};
+	glSelectBuffer(64, hitBuffer);
+	glRenderMode(GL_SELECT);
+	GLint vp[4];
+	glGetIntegerv(GL_VIEWPORT,vp);
+ 	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluPickMatrix(x,currentRes[1]-y,50.0,50.0,vp);
+	gluPerspective(45.0,RESOLUTION_X/RESOLUTION_Y, 0.5, 50.0);
+	glScalef((float)RESOLUTION_X/currentRes[0], (float)RESOLUTION_Y/currentRes[1], 1.0);
+  
+	glMatrixMode(GL_MODELVIEW);
+	//camera.apply_transformations();
+	renderScene();
+	glMatrixMode(GL_PROJECTION);
+  	//renderScene();
+	//setShaderVariables(shaderProg);
+  
+  	//glMatrixMode(GL_PROJECTION);
+  	glPopMatrix();
+  	glFlush();
+  	GLint hitCount = glRenderMode(GL_RENDER);
+  	listSelected(hitCount, hitBuffer);
+	glMatrixMode(GL_MODELVIEW);
+}
 
-	glVertexAttrib3f(1,0.0f,0.0f,1.0f);
-	glNormal3f(0.0f,1.0f,0.0f);
-	glVertex3f(1.0f,1.0f,1.0f);
-	glVertex3f(-1.0f,1.0f,1.0f);
-	glVertex3f(-1.0f,1.0f,-1.0f);
-	glVertex3f(1.0f,1.0f,-1.0f);
-
-	glVertexAttrib3f(1,1.0f,1.0f,0.0f);
-	glNormal3f(0.0f,-1.0f,0.0f);
-	glVertex3f(1.0f,-1.0f,1.0f);
-	glVertex3f(-1.0f,-1.0f,1.0f);
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glVertex3f(1.0f,-1.0f,-1.0f);
-
-	glVertexAttrib3f(1,0.0f,1.0f,1.0f);
-	glNormal3f(0.0f,0.0f,1.0f);
-	glVertex3f(1.0f,1.0f,1.0f);
-	glVertex3f(-1.0f,1.0f,1.0f);
-	glVertex3f(-1.0f,-1.0f,1.0f);
-	glVertex3f(1.0f,-1.0f,1.0f);
-
-	glVertexAttrib3f(1,1.0f, 1.0f,1.0f);
-	glNormal3f(0.0f,0.0f,-1.0f);
-	glVertex3f(1.0f,1.0f,-1.0f);
-	glVertex3f(-1.0f,1.0f,-1.0f);
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glVertex3f(1.0f,-1.0f,-1.0f);
-
-	glEnd();
+void listSelected(GLint hits, GLuint *buffer)
+{
+  GLint n = hits;
+  int i = 0;
+  //printf("Listing selected %d\n",n);
+  unsigned int min = ~0;
+  unsigned int toSelect = 0;
+  while(n > 0)
+    {
+      GLuint nameCount = buffer[i];
+      //printf("count: %u\nz1: %u\nz2: %u\n",buffer[i],buffer[i+1],buffer[i+2]);
+      for(int j = 0; j < nameCount; j++)
+	{
+	if(buffer[i+j+3] != 0)
+	{
+		if(buffer[i+1] < min)
+		{
+			min = buffer[i+1];	
+			toSelect = buffer[i+j+3];
+		}
+	}
+	//printf("name: %u\n",buffer[i+j+3]);//printName(buffer[i+j+3]);
+	}
+      n--;
+      i+=nameCount+3;
+    }
+	/*printf("%d hits:\n", hits);
+ 	int i;
+ 	for (i = 0; i < hits; i++)
+ 		printf(	"Number: %d\n"
+ 				"Min Z: %d\n"
+ 				"Max Z: %d\n"
+ 				"Name on stack: %d\n",
+ 				(GLubyte)buffer[i * 4],
+ 				(GLubyte)buffer[i * 4 + 1],
+ 				(GLubyte)buffer[i * 4 + 2],
+ 				(GLubyte)buffer[i * 4 + 3]
+ 				);*/
+ 	selected = toSelect;
+ 	//printf("%u\n",toSelect);
 }
 
 void draw_xy_grid(int w, int h, float dx, float dy)
@@ -163,7 +276,7 @@ void renderScene()
 {
 	// Set color and depth clear value
 	glClearDepth(1.f);
-	glClearColor(0.5f, 0.5f, 0.5f, 0.5f);
+	glClearColor(0.4f, 0.4f, 0.4f, 0.4f);
 	
 	// Enable Z-buffer read and write
 	glEnable(GL_DEPTH_TEST);
@@ -180,10 +293,11 @@ void renderScene()
 	setShaderVariables(shaderProg);
 		
 	//Draw everything
-	glPushMatrix();
+	/*glPushMatrix();
 	setShaderVariables(shaderProg);
 	drawExampleCube();
-	glPopMatrix();
+	glPopMatrix();*/
+	drawShapes();
 
 	//Draw the UI (does not use lighting)
 	if(GL20Support)
@@ -218,8 +332,35 @@ void handleEvents()
 			App->Close();
 		//
 		// Escape key : exit
-		if ((Event.Type == sf::Event::KeyPressed) && (Event.Key.Code == sf::Key::Escape))
-			App->Close();
+		if (Event.Type == sf::Event::KeyPressed)
+		{
+			if(Event.Key.Code == sf::Key::Escape)
+				App->Close();
+			else if(Event.Key.Code == sf::Key::Q)
+				axisM = X_AXIS;
+			else if(Event.Key.Code == sf::Key::W)
+				axisM = Y_AXIS;
+			else if(Event.Key.Code == sf::Key::E)
+				axisM = Z_AXIS;
+			else if(Event.Key.Code == sf::Key::A)
+				transM = TRANS_TRANSLATION;
+			else if(Event.Key.Code == sf::Key::S)
+				transM = TRANS_ROTATION;
+			else if(Event.Key.Code == sf::Key::D)
+				transM = TRANS_SCALE;
+			else if(Event.Key.Code == sf::Key::F1)
+				createShape(SHAPE_TETRAHEDRON);
+			else if(Event.Key.Code == sf::Key::F2)
+				createShape(SHAPE_CUBE);
+			else if(Event.Key.Code == sf::Key::F3)
+				createShape(SHAPE_OCTAHEDRON);
+			else if(Event.Key.Code == sf::Key::F4)
+				createShape(SHAPE_SPHERE);
+			else if(Event.Key.Code == sf::Key::F5)
+				createShape(SHAPE_CYLINDER);
+			else if(Event.Key.Code == sf::Key::F6)
+				createShape(SHAPE_PLANE);
+		}
 
 		// Resize event : adjust viewport
 		if (Event.Type == sf::Event::Resized)
@@ -228,14 +369,17 @@ void handleEvents()
 			currentRes[0] = Event.Size.Width;
 			currentRes[1] = Event.Size.Height;	
 			update_perspective();
-			//setupTargetTexture();
 		}
 
 		if (Event.Type == sf::Event::MouseButtonPressed)
 		{	
 			lastPos[0] = Event.MouseButton.X;
 			lastPos[1] = Event.MouseButton.Y;
-			
+			if(Event.MouseButton.Button == sf::Mouse::Left)
+			{
+				handleSelection(Event.MouseButton.X, Event.MouseButton.Y);
+			}
+
 			if(Event.MouseButton.Button == sf::Mouse::Left && !shiftDown)
 			{
 				buttonDown[0] = 1;
@@ -264,13 +408,39 @@ void handleEvents()
 		{
 			int x = Event.MouseMove.X;
 			int y = Event.MouseMove.Y;
-			
-			if(buttonDown[0])
-				camera.trackball_rotate(lastPos[0], lastPos[1], x, y, currentRes[0], currentRes[1]);
-			if(buttonDown[1])
-				camera.trackball_translate(lastPos[0], lastPos[1], x, y);
-			if(buttonDown[2])
-				camera.trackball_translate_z(lastPos[0], lastPos[1], x, y);
+			if(selected == 0)
+			{
+				if(buttonDown[0])
+					camera.trackball_rotate(lastPos[0], lastPos[1], x, y, currentRes[0], currentRes[1]);
+				if(buttonDown[1])
+					camera.trackball_translate(lastPos[0], lastPos[1], x, y);
+				if(buttonDown[2])
+					camera.trackball_translate_z(lastPos[0], lastPos[1], x, y);
+			}
+			else
+			{
+				Shape* s = findShape(selected);
+				float diff = (x-lastPos[0]);
+				vec3 v;
+				switch(axisM)
+				{
+					case X_AXIS:
+						v = vec3(diff,0.0,0.0); break;
+					case Y_AXIS:
+						v = vec3(0.0,diff,0.0); break;
+					case Z_AXIS:
+						v = vec3(0.0,0.0,diff); break;
+				}
+				switch(transM)
+				{
+					case TRANS_TRANSLATION:
+						s->trans.trans += v*0.01; break;
+					case TRANS_ROTATION:
+						s->rot.trans += v*0.1; break;
+					case TRANS_SCALE:
+						s->scale.trans += v*0.01; break;
+				}
+			}
 			lastPos[0] = x;
 			lastPos[1] = y;
 		}
@@ -288,7 +458,6 @@ void update_perspective()
 
 void init()
 {
-	Shape s = ShapeCube((unsigned int)0, TransformTranslate(vec3(0.0,0.0,0.0)), TransformRotate(vec3(0.0,0.0,0.0)), TransformScale(vec3(1.0,1.0,1.0)));
 	// Create the main window
 	App = new sf::Window(sf::VideoMode(RESOLUTION_X, RESOLUTION_Y, 32), "Modeling Program");
 		
@@ -300,10 +469,17 @@ void init()
 	currentRes[0] = RESOLUTION_X;
 	currentRes[1] = RESOLUTION_Y;
 
+	transM = TRANS_TRANSLATION;
+	axisM = X_AXIS;
+
+	selected = 0;
+	idCounter = 1;
+	createShape(SHAPE_TETRAHEDRON);
+
 	//Initial light position
 	lightPos[0] = 2.0f;
 	lightPos[1] = 2.0f;
-	lightPos[2] = 0.0f;
+	lightPos[2] = 2.0f;
 
 	//Initial camera position
 	cameraPos[0] = 0.0f;

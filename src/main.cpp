@@ -13,6 +13,7 @@
 #include <list>
 #include <map>
 #include "button.h"
+#include "draw.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -22,6 +23,7 @@
 #define RESOLUTION_X 800
 #define RESOLUTION_Y 800
 #define SELECT_BOX_SIZE 1
+#define FPS 60
 
 typedef enum {X_AXIS, Y_AXIS, Z_AXIS} axis_mode;
 typedef enum {TRANS_TRANSLATION, TRANS_ROTATION, TRANS_SCALE} trans_mode;
@@ -47,20 +49,21 @@ trans_mode transM;
 vec3 buttonT = vec3(0.7,0.9,1.0);
 vec3 buttonB = vec3(0.1,0.1,0.1);
 vec3 textC = vec3(0.0,0.0,0.0);
+vec4 padding = vec4(10.0,10.0,10.0,10.0);
 
-Button translateButton = Button("Translate",vec2(0.0,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, true,true);
-Button rotateButton = Button("Rotate",vec2(translateButton.width()+5,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button scaleButton = Button("Scale",vec2(translateButton.width()+rotateButton.width()+10,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button XButton = Button("X",vec2(0.0,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, true,true);
-Button YButton = Button("Y",vec2(XButton.width()+5.0,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button ZButton = Button("Z",vec2(XButton.width()+YButton.width()+10,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button tetraButton = Button("Tetrahedron",vec2(0,70),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button cubeButton = Button("Cube",vec2(0,105),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button octButton = Button("Octahedron",vec2(0,140),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button sphereButton = Button("Sphere",vec2(0,175),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button cylinderButton = Button("Cylinder",vec2(0,210),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button planeButton = Button("Plane",vec2(0,245),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
-Button deleteButton = Button("Delete",vec2(0,280),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button translateButton = Button("Translate",vec2(0.0),true,false,textC,padding,buttonT, buttonB, true,true);
+Button rotateButton = Button("Rotate",vec2(translateButton.width()+5,0.0),true,false,textC,padding,buttonT, buttonB, false,true);
+Button scaleButton = Button("Scale",vec2(translateButton.width()+rotateButton.width()+10,0.0),true,false,textC,padding,buttonT, buttonB, false,true);
+Button XButton = Button("X",vec2(0.0,translateButton.height()+5),true,false,textC,padding,buttonT, buttonB, true,true);
+Button YButton = Button("Y",vec2(XButton.width()+5.0,translateButton.height()+5),true,false,textC,padding,buttonT, buttonB, false,true);
+Button ZButton = Button("Z",vec2(XButton.width()+YButton.width()+10,translateButton.height()+5),true,false,textC,padding,buttonT, buttonB, false,true);
+Button tetraButton = Button("Tetrahedron",vec2(0,70),true,false,textC,padding,buttonT, buttonB, false,true);
+Button cubeButton = Button("Cube",vec2(0,105),true,false,textC,padding,buttonT, buttonB, false,true);
+Button octButton = Button("Octahedron",vec2(0,140),true,false,textC,padding,buttonT, buttonB, false,true);
+Button sphereButton = Button("Sphere",vec2(0,175),true,false,textC,padding,buttonT, buttonB, false,true);
+Button cylinderButton = Button("Cylinder",vec2(0,210),true,false,textC,padding,buttonT, buttonB, false,true);
+Button planeButton = Button("Plane",vec2(0,245),true,false,textC,padding,buttonT, buttonB, false,true);
+Button deleteButton = Button("Delete",vec2(0,280),true,false,textC,padding,buttonT, buttonB, false,true);
 
 FILE * logFile;
 bool GL20Support;
@@ -197,13 +200,9 @@ void handleSelection(int x, int y)
 	glScalef((float)RESOLUTION_X/currentRes[0], (float)RESOLUTION_Y/currentRes[1], 1.0);
   
 	glMatrixMode(GL_MODELVIEW);
-	//camera.apply_transformations();
 	renderScene();
 	glMatrixMode(GL_PROJECTION);
-  	//renderScene();
-	//setShaderVariables(shaderProg);
   
-  	//glMatrixMode(GL_PROJECTION);
   	glPopMatrix();
   	glFlush();
   	GLint hitCount = glRenderMode(GL_RENDER);
@@ -220,7 +219,7 @@ void listSelected(GLint hits, GLuint *buffer)
   while(n > 0)
     {
       GLuint nameCount = buffer[i];
-      //printf("count: %u\nz1: %u\nz2: %u\n",buffer[i],buffer[i+1],buffer[i+2]);
+      //printf("name count: %u\nz1: %u\nz2: %u\n",buffer[i],buffer[i+1],buffer[i+2]);
       for(int j = 0; j < nameCount; j++)
 	{
 	if(buffer[i+j+3] != 0)
@@ -236,18 +235,6 @@ void listSelected(GLint hits, GLuint *buffer)
       n--;
       i+=nameCount+3;
     }
-	/*printf("%d hits:\n", hits);
- 	int i;
- 	for (i = 0; i < hits; i++)
- 		printf(	"Number: %d\n"
- 				"Min Z: %d\n"
- 				"Max Z: %d\n"
- 				"Name on stack: %d\n",
- 				(GLubyte)buffer[i * 4],
- 				(GLubyte)buffer[i * 4 + 1],
- 				(GLubyte)buffer[i * 4 + 2],
- 				(GLubyte)buffer[i * 4 + 3]
- 				);*/
  	selected = toSelect;
  	//printf("%u\n",toSelect);
 }
@@ -372,30 +359,6 @@ void handleEvents()
 				App->Close();
 			else if(Event.Key.Code == sf::Key::Delete)
 				deleteShape();
-			/*else if(Event.Key.Code == sf::Key::Q)
-				axisM = X_AXIS;
-			else if(Event.Key.Code == sf::Key::W)
-				axisM = Y_AXIS;
-			else if(Event.Key.Code == sf::Key::E)
-				axisM = Z_AXIS;
-			else if(Event.Key.Code == sf::Key::A)
-				transM = TRANS_TRANSLATION;
-			else if(Event.Key.Code == sf::Key::S)
-				transM = TRANS_ROTATION;
-			else if(Event.Key.Code == sf::Key::D)
-				transM = TRANS_SCALE;
-			else if(Event.Key.Code == sf::Key::F1)
-				createShape(SHAPE_TETRAHEDRON);
-			else if(Event.Key.Code == sf::Key::F2)
-				createShape(SHAPE_CUBE);
-			else if(Event.Key.Code == sf::Key::F3)
-				createShape(SHAPE_OCTAHEDRON);
-			else if(Event.Key.Code == sf::Key::F4)
-				createShape(SHAPE_SPHERE);
-			else if(Event.Key.Code == sf::Key::F5)
-				createShape(SHAPE_CYLINDER);
-			else if(Event.Key.Code == sf::Key::F6)
-				createShape(SHAPE_PLANE);*/
 		}
 
 		// Resize event : adjust viewport
@@ -461,7 +424,7 @@ void handleEvents()
 			else
 			{
 				Shape* s = findShape(selected);
-				float diff = (x-lastPos[0]);
+				float diff = (x-lastPos[0])-(y-lastPos[1]);
 				vec3 v;
 				switch(axisM)
 				{
@@ -564,6 +527,17 @@ void drawButtons()
 	cylinderButton.drawButton();
 	planeButton.drawButton();
 	deleteButton.drawButton();
+	
+	vec4 viewport = getViewport();
+
+	glBegin(GL_TRIANGLES);
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(30.0f,viewport[3]-325.0,0.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(0.0f,viewport[3]-375.0,0.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(60.0f,viewport[3]-375.0,0.0f);
+	glEnd();
 }
 
 void update_perspective()
@@ -651,6 +625,7 @@ void init()
 	// Start render loop
 	while (App->IsOpened())
 	{
+		Clock.Reset();
 		// Process events
 		handleEvents();
 		
@@ -664,6 +639,9 @@ void init()
 						
 		// Finally, display rendered frame on screen
 		App->Display();
+		float diff = 1.0/FPS-Clock.GetElapsedTime();
+		if(diff > 0)
+			sf::Sleep(diff);
 	}
 }
 

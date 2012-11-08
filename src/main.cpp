@@ -14,6 +14,7 @@
 #include <map>
 #include "button.h"
 #include "draw.h"
+#include "StateSave.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -69,6 +70,8 @@ Button deleteButton = Button("Delete",vec2(0,280),true,false,textC,padding,butto
 Button RButton = Button("R",vec2(0,325),true,false,textC,padding,buttonT, buttonB, false,true);
 Button GButton = Button("G",vec2(30,325),true,false,textC,padding,buttonT, buttonB, false,true);
 Button BButton = Button("B",vec2(60,325),true,false,textC,padding,buttonT, buttonB, false,true);
+Button loadButton = Button("Load",vec2(0,360),true,false,textC,padding,buttonT, buttonB, false,true);
+Button saveButton = Button("Save",vec2(0,395),true,false,textC,padding,buttonT, buttonB, false,true);
 
 FILE * logFile;
 bool GL20Support;
@@ -556,6 +559,10 @@ bool handleButtons(float x, float y)
 		colorM = COLOR_G;
 	else if(BButton.contains(x,y))
 		colorM = COLOR_B;
+	else if(loadButton.contains(x,y))
+		idCounter = load("default.mcg", &listOfShapes);
+	else if(saveButton.contains(x,y))
+		save("default", listOfShapes);
 	else return false;
 	buttonCheck();
 	return true;
@@ -579,6 +586,8 @@ void drawButtons()
 	RButton.drawButton();
 	GButton.drawButton();
 	BButton.drawButton();
+	loadButton.drawButton();
+	saveButton.drawButton();
 	
 	/*vec4 viewport = getViewport();
 

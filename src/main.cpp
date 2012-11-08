@@ -200,7 +200,7 @@ void handleSelection(int x, int y)
  	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	gluPickMatrix(x,currentRes[1]-y,50.0,50.0,vp);
+	gluPickMatrix(x,currentRes[1]-y,5.0,5.0,vp);
 	gluPerspective(45.0,RESOLUTION_X/RESOLUTION_Y, 0.5, 50.0);
 	glScalef((float)RESOLUTION_X/currentRes[0], (float)RESOLUTION_Y/currentRes[1], 1.0);
   

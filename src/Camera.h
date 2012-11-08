@@ -1,6 +1,9 @@
 #ifndef __CAMERA
 #define __CAMERA
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #define TRACKBALLSIZE (0.8)          // trackball size in percentage of window
 #define Z_SENSITIVITY 0.01           // used to scale translations in z
 #define XY_SENSITIVITY 0.01 

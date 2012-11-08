@@ -9,7 +9,7 @@ float rMod(float z)
 	if( z>=1.0 || z<=-1.0 )
 		return 0.0;
 	// z^2+result^2=radius^2
-	return sqrt(1.0 - pow(z,2.0));
+	return sqrt(1.0f - pow(z,2));
 }
 
 //TODO: Make sure all shapes face outward.

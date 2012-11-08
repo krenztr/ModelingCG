@@ -14,7 +14,6 @@ int save(char const * filename, std::list<Shape> listOfShapes)
 	
 	fprintf(savefile, "MCG_savestate_file\n");
 	std::list<Shape>::iterator it;
-	// TODO: Get for each loop to work.
 	for( it=listOfShapes.begin() ; it != listOfShapes.end(); it++ )
 	{
 		Shape s = *it;
@@ -30,12 +29,16 @@ int save(char const * filename, std::list<Shape> listOfShapes)
 
 int load(char const * filename, std::list<Shape> * listOfShapes)
 {
-	// TODO: Check for correct filetype.
+	int len = strlen(filename);
+	if(len < 4 || filename[len-4] != '.' || filename[len-3] != 'm'
+		|| filename[len-2] != 'c' || filename[len-1] != 'g')
+		return -2;
+
 	FILE *loadfile = fopen(filename, "r");
 	if(loadfile == NULL) return -1;
 	
 	//char firstLine[50];
-	fscanf(loadfile, "MCG_savestate_file");
+	fscanf(loadfile, "MCG_savestate_file\n");
 	//if(firstline != "MCG_savestate_file") return -3;
 
 	unsigned int idCounter = 0;

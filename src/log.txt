@@ -4,7 +4,6 @@ ARB vertex programs supported.
 ARB fragment programs supported.
 Shader info log for:
   Shaders/Render3dModel.vert
-0(27) : warning C7011: implicit cast from "vec4" to "vec3"
 
 Shader info log for:
   Shaders/Render3dModel.frag
@@ -12,9 +11,6 @@ Shader info log for:
 Shader program info log for:
   Shaders/Render3dModel.vert
   Shaders/Render3dModel.frag
-Vertex info
------------
-0(27) : warning C7011: implicit cast from "vec4" to "vec3"
 
 Shader info log for:
   Shaders/NoLighting.vert

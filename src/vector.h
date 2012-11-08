@@ -9,7 +9,7 @@
 #ifndef vector_h
 #define vector_h
 
-#include <Math.h>
+#include <math.h>
 
 struct vec2 {
     float x;

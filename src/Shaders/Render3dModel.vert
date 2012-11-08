@@ -24,7 +24,7 @@ void main()
 	vec4 vertex = projMatrix * viewMatrix * gl_Vertex;  //use the uploaded matrix data
 	gl_Position = vertex;  //output the transformed vertex
 	color = ambient;
-	normal = normalize(viewMatrix * vec4(gl_Normal,0.0));
+	normal = vec3(normalize(viewMatrix * vec4(gl_Normal,0.0)));
 	//normal = gl_Normal;
 	lightDisplacement = vec4(lightPos,1.0)-gl_Vertex;
 	camera = normalize(vec4(cameraPos,1.0)-gl_Vertex);

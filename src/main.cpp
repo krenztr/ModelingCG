@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
+#include <string.h>
 #include "Config.h"
 #include "ShaderManager.h"
 #include "TextureBufferObject.h"
@@ -11,6 +12,7 @@
 #include "shape.h"
 #include <list>
 #include <map>
+#include "button.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -42,6 +44,24 @@ unsigned int selected;
 axis_mode axisM;
 trans_mode transM;
 
+vec3 buttonT = vec3(0.7,0.9,1.0);
+vec3 buttonB = vec3(0.1,0.1,0.1);
+vec3 textC = vec3(0.0,0.0,0.0);
+
+Button translateButton = Button("Translate",vec2(0.0,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, true,true);
+Button rotateButton = Button("Rotate",vec2(translateButton.width()+5,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button scaleButton = Button("Scale",vec2(translateButton.width()+rotateButton.width()+10,0.0),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button XButton = Button("X",vec2(0.0,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, true,true);
+Button YButton = Button("Y",vec2(XButton.width()+5.0,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button ZButton = Button("Z",vec2(XButton.width()+YButton.width()+10,translateButton.height()+5),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button tetraButton = Button("Tetrahedron",vec2(0,70),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button cubeButton = Button("Cube",vec2(0,105),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button octButton = Button("Octahedron",vec2(0,140),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button sphereButton = Button("Sphere",vec2(0,175),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button cylinderButton = Button("Cylinder",vec2(0,210),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button planeButton = Button("Plane",vec2(0,245),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+Button deleteButton = Button("Delete",vec2(0,280),true,false,textC,vec4(10.0,10.0,10.0,10.0),buttonT, buttonB, false,true);
+
 FILE * logFile;
 bool GL20Support;
 
@@ -54,6 +74,8 @@ void __glewInit();
 void update_perspective();
 void draw_grid(int w, int h, int dx, int dy);
 void listSelected(GLint hits, GLuint *buffer);
+bool handleButtons(float x, float y);
+void drawButtons();
 
 Shape* findShape(unsigned int id)
 {
@@ -101,12 +123,13 @@ void drawSelectCube()
 	glEnd();
 }
 
-void deleteShape(unsigned int id)
+void deleteShape()
 {
 	for (std::list<Shape>::iterator it = listOfShapes.begin(); it != listOfShapes.end(); it++)
 	{
-		if(it->shapeId == id)
+		if(it->shapeId == selected)
 		{
+			selected = 0;
 			listOfShapes.erase(it);
 			break;
 		}
@@ -152,7 +175,7 @@ void drawShapes()
 
 void createShape(shape_type st)
 {
-	Shape s = Shape(st, idCounter, TransformTranslate(vec3(0.0,0.0,3.0)), TransformRotate(vec3(45.0,0.0,0.0)), TransformScale(vec3(2.0,2.0,2.0)));
+	Shape s = Shape(st, idCounter, TransformTranslate(vec3(0.0,0.0,0.0)), TransformRotate(vec3(0.0,0.0,0.0)), TransformScale(vec3(1.0,1.0,1.0)));
 	listOfShapes.push_back(s);
 	selected = idCounter;
 	idCounter++;
@@ -192,7 +215,6 @@ void listSelected(GLint hits, GLuint *buffer)
 {
   GLint n = hits;
   int i = 0;
-  //printf("Listing selected %d\n",n);
   unsigned int min = ~0;
   unsigned int toSelect = 0;
   while(n > 0)
@@ -307,6 +329,18 @@ void renderScene()
 	setShaderVariables(noLightProg);
 	draw_xy_grid(20,20,1.0,1.0);
 
+	glPushMatrix();
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0.0,currentRes[0],0.0,currentRes[1]);
+	setShaderVariables(noLightProg);
+	drawButtons();
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	
 	//copy buffer to texture
 	/*glBindTexture(GL_TEXTURE_2D,textureTarget);
 	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, currentRes[0], currentRes[1], 0);
@@ -336,7 +370,9 @@ void handleEvents()
 		{
 			if(Event.Key.Code == sf::Key::Escape)
 				App->Close();
-			else if(Event.Key.Code == sf::Key::Q)
+			else if(Event.Key.Code == sf::Key::Delete)
+				deleteShape();
+			/*else if(Event.Key.Code == sf::Key::Q)
 				axisM = X_AXIS;
 			else if(Event.Key.Code == sf::Key::W)
 				axisM = Y_AXIS;
@@ -359,7 +395,7 @@ void handleEvents()
 			else if(Event.Key.Code == sf::Key::F5)
 				createShape(SHAPE_CYLINDER);
 			else if(Event.Key.Code == sf::Key::F6)
-				createShape(SHAPE_PLANE);
+				createShape(SHAPE_PLANE);*/
 		}
 
 		// Resize event : adjust viewport
@@ -375,9 +411,14 @@ void handleEvents()
 		{	
 			lastPos[0] = Event.MouseButton.X;
 			lastPos[1] = Event.MouseButton.Y;
+			float x = Event.MouseButton.X;
+			float y = currentRes[1]-Event.MouseButton.Y;
 			if(Event.MouseButton.Button == sf::Mouse::Left)
 			{
-				handleSelection(Event.MouseButton.X, Event.MouseButton.Y);
+				if(!handleButtons(x,y))
+				{
+					handleSelection(Event.MouseButton.X, Event.MouseButton.Y);
+				}
 			}
 
 			if(Event.MouseButton.Button == sf::Mouse::Left && !shiftDown)
@@ -447,6 +488,84 @@ void handleEvents()
 	}
 }
 
+void buttonCheck()
+{
+	translateButton.isFlipped = false;
+	rotateButton.isFlipped = false;
+	scaleButton.isFlipped = false;
+	XButton.isFlipped = false;
+	YButton.isFlipped = false;
+	ZButton.isFlipped = false;
+	switch(transM)
+	{
+		case TRANS_TRANSLATION:
+			translateButton.isFlipped = true; break;
+		case TRANS_ROTATION:
+			rotateButton.isFlipped = true; break;
+		case TRANS_SCALE:
+			scaleButton.isFlipped = true; break;
+	}
+	switch(axisM)
+	{
+		case X_AXIS:
+			XButton.isFlipped = true; break;
+		case Y_AXIS:
+			YButton.isFlipped = true; break;
+		case Z_AXIS:
+			ZButton.isFlipped = true; break;
+	}
+}
+
+bool handleButtons(float x, float y)
+{
+	if(translateButton.contains(x,y))
+		transM = TRANS_TRANSLATION;
+	else if(rotateButton.contains(x,y))
+		transM = TRANS_ROTATION;
+	else if(scaleButton.contains(x,y))
+		transM = TRANS_SCALE;
+	else if(XButton.contains(x,y))
+		axisM = X_AXIS;
+	else if(YButton.contains(x,y))
+		axisM = Y_AXIS;
+	else if(ZButton.contains(x,y))
+		axisM = Z_AXIS;
+	else if(tetraButton.contains(x,y))
+		createShape(SHAPE_TETRAHEDRON);
+	else if(cubeButton.contains(x,y))
+		createShape(SHAPE_CUBE);
+	else if(octButton.contains(x,y))
+		createShape(SHAPE_OCTAHEDRON);
+	else if(sphereButton.contains(x,y))
+		createShape(SHAPE_SPHERE);
+	else if(cylinderButton.contains(x,y))
+		createShape(SHAPE_CYLINDER);
+	else if(planeButton.contains(x,y))
+		createShape(SHAPE_PLANE);
+	else if(deleteButton.contains(x,y))
+		deleteShape();
+	else return false;
+	buttonCheck();
+	return true;
+}
+
+void drawButtons()
+{
+	translateButton.drawButton();
+	rotateButton.drawButton();
+	scaleButton.drawButton();
+	XButton.drawButton();
+	YButton.drawButton();
+	ZButton.drawButton();
+	tetraButton.drawButton();
+	cubeButton.drawButton();
+	octButton.drawButton();
+	sphereButton.drawButton();
+	cylinderButton.drawButton();
+	planeButton.drawButton();
+	deleteButton.drawButton();
+}
+
 void update_perspective()
 {
 	glMatrixMode(GL_PROJECTION);
@@ -474,7 +593,6 @@ void init()
 
 	selected = 0;
 	idCounter = 1;
-	createShape(SHAPE_TETRAHEDRON);
 
 	//Initial light position
 	lightPos[0] = 2.0f;

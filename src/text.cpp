@@ -6,6 +6,7 @@
 //
 //
 
+#include <string.h>
 #include "text.h"
 #include <SFML/Window.hpp>
 #include "glyphs.h"
